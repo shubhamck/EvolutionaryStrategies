@@ -12,8 +12,9 @@ class Agent:
 		epsilon = vector sampled from Normal Distribution with mean zero and std 1
 		sigma = scalar : Std of noise
 		"""
+		#print "Epsilon : ",epsilon
 		for i in range(self.theta.shape[0]):
-			self.dtheta[i] = self.theta[i] + sigma*epsilon
+			self.dtheta[i] = self.theta[i] + sigma*epsilon[i]
 
 
 	def act(self, obs):
@@ -24,7 +25,7 @@ class Agent:
 		#print "Obs shape: ", obs.shape
 		action =  np.dot(obs,self.dtheta)
 
-		if action > 0:
+		if action < 0.5:
 			return 0
 		else:
 			return 1
@@ -36,9 +37,18 @@ class Agent:
 		"""
 		Updates theta 
 		"""
+		#print self.theta
+		#self.theta = self.theta.T
+		#print self.theta
 
-		for i in range(self.theta.shape[0]):
-			self.theta[i] = self.theta[i] + (alpha/(rolls*sigma))*np.dot(rewards.T, epsilons)
+		#print  "Dot ",np.dot(epsilons.T,rewards)
+
+		self.theta = self.theta + (alpha/(rolls*sigma))*np.dot(epsilons.T,rewards)
+		#print self.theta
+
+		#self.theta = self.theta.T
+		#print self.theta
+		
 
 
 

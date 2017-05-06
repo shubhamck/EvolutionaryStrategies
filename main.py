@@ -2,15 +2,16 @@ import numpy as np
 import random
 import gym
 import agent
+import matplotlib.pyplot as plt
 
 # Declare GLobal Variables
 NUM_ROLLOUTS = 50
-NUM_EPOCHS = 1000
+NUM_EPOCHS = 500
 SIGMA = 0.1
 ALPHA = 0.001
 
 
-
+np.random.seed(0)
 env = gym.make("CartPole-v0")
 
 # Obs is 4x1 for cartpole
@@ -24,29 +25,34 @@ theta = np.random.rand(4)
 
 #Column vector
 theta = theta.T
-#print theta.shape
+#print theta.shape gives 4x1 vector
 
 #Instantiate Agent
 agent = agent.Agent(theta)
 
-for i in range(NUM_EPOCHS):
+rewardList = []
 
-	epsilons = []
+for i in range(NUM_EPOCHS):
+	#print "In ",i," epoch"
+
+	#epsilons = []
 	F = []
-	
+	epsilon = np.random.randn(NUM_ROLLOUTS, 4)
 	for j in range(NUM_ROLLOUTS):
+		#print "In ",j," Roll"
 		obs = env.reset()
 		obs = np.reshape(obs,(1,4))
 
-		epsilon = np.random.normal(0,1)
-		epsilons.append(epsilon)
+		#epsilon = np.random.normal(0,1)
+		#epsilon = np.random.randn(NUM_ROLLOUTS, 4)
+		#epsilons.append(epsilon)
 
-		agent.pop_policy(epsilon, SIGMA)
+		agent.pop_policy(epsilon[j], SIGMA)
 
 		done = 0
 		tot_reward = 0
 
-		while not done:
+		while not done and tot_reward<501:
 		 	
 		 	obs_new, reward, done, _ = env.step(agent.act(obs))
 		 	tot_reward = tot_reward + reward
@@ -55,16 +61,24 @@ for i in range(NUM_EPOCHS):
 
 		F.append(tot_reward)
 
+	rewardList.append(sum(F)/float(len(F)))
 	print "Episode : ",i," reward : ",sum(F)/float(len(F))
 
 	# Reshape arrays for Updating
-	F = np.reshape(np.asarray(F), (NUM_ROLLOUTS,1))
+	#F = np.reshape(np.asarray(F), (NUM_ROLLOUTS,1))
+	F = np.asarray(F)
 
 	F = (F - np.mean(F))/np.std(F)
-	epsilons = np.reshape(np.asarray(epsilons), (NUM_ROLLOUTS,1))
+	#epsilons = np.reshape(np.asarray(epsilons), (NUM_ROLLOUTS,1))
 
 	#Update thetas with F and epsilon
-	agent.update(F,epsilons, ALPHA, NUM_ROLLOUTS, SIGMA)
+	agent.update(F,epsilon, ALPHA, NUM_ROLLOUTS, SIGMA)
+	#print "theta ",agent.theta
+
+plt.plot(rewardList)
+plt.xlabel('Episodes')
+plt.ylabel('Average Reward')
+plt.show()
 
 
 
